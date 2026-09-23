@@ -1,24 +1,24 @@
 import json
 import os
-import joblib
-import pandas as pd
+import xgboost as xgb
 import numpy as np
 from http.server import BaseHTTPRequestHandler
 
 # ─────────────────────────────────────────────
-#  GLOBAL MODEL CACHING (persists across warm lambdas)
+#  GLOBAL BOOSTER CACHING (fast, lightweight memory footprint)
 # ─────────────────────────────────────────────
-_MODEL = None
+_BOOSTER = None
 
-def get_model():
-    global _MODEL
-    if _MODEL is None:
+def get_booster():
+    global _BOOSTER
+    if _BOOSTER is None:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        model_path = os.path.join(base_dir, "best_xgboost_model.joblib")
+        model_path = os.path.join(base_dir, "model.json")
         if not os.path.exists(model_path):
-            model_path = os.path.join(os.getcwd(), "best_xgboost_model.joblib")
-        _MODEL = joblib.load(model_path)
-    return _MODEL
+            model_path = os.path.join(os.getcwd(), "model.json")
+        _BOOSTER = xgb.Booster()
+        _BOOSTER.load_model(model_path)
+    return _BOOSTER
 
 FERTILITY_MAP = {
     0: {
@@ -79,6 +79,7 @@ class handler(BaseHTTPRequestHandler):
         self._send_json(200, {
             "status": "healthy",
             "service": "AI Soil Fertility Prediction API",
+            "model_format": "Native XGBoost JSON (Lightweight Serverless)",
             "features": FEATURE_KEYS
         })
 
@@ -90,31 +91,28 @@ class handler(BaseHTTPRequestHandler):
 
             sample_id = data.get("sample_id", "Plot-001")
             user_inputs = {k: float(data.get(k, 0.0)) for k in FEATURE_KEYS}
-            df = pd.DataFrame([user_inputs])
+            
+            # Format input array for XGBoost DMatrix
+            row_vals = [user_inputs[k] for k in FEATURE_KEYS]
+            np_arr = np.array([row_vals], dtype=np.float32)
+            dmatrix = xgb.DMatrix(np_arr, feature_names=FEATURE_KEYS)
 
-            model = get_model()
-            pred_code = int(model.predict(df)[0])
-            probabilities = model.predict_proba(df)[0].tolist()
-            top_conf = float(max(probabilities) * 100)
+            booster = get_booster()
+            probs = booster.predict(dmatrix)[0]
+            pred_code = int(np.argmax(probs))
+            top_conf = float(probs[pred_code] * 100)
             fert_info = FERTILITY_MAP.get(pred_code, FERTILITY_MAP[1])
 
-            # Feature importances
-            importances = getattr(model, "feature_importances_", None)
-            if importances is not None and len(importances) == len(FEATURE_KEYS):
-                imp_list = [
-                    {"feature": FEATURE_LABELS[k], "importance": round(float(importances[i]) * 100, 2)}
-                    for i, k in enumerate(FEATURE_KEYS)
-                ]
-            else:
-                default_imp = [
-                    ("Organic Carbon", 2.61), ("Soil pH", 2.89), ("Zinc", 2.93),
-                    ("Iron", 2.99), ("Elec. Cond.", 3.18), ("Manganese", 3.24),
-                    ("Boron", 3.28), ("Sulphur", 3.56), ("Potassium", 3.83),
-                    ("Copper", 4.47), ("Phosphorus", 26.80), ("Nitrogen", 40.23)
-                ]
-                imp_list = [{"feature": f, "importance": v} for f, v in default_imp]
-
-            # Sort importances ascending for horizontal bar chart
+            # Calculate feature gain percentages
+            raw_scores = booster.get_score(importance_type="gain")
+            total_gain = sum(raw_scores.values()) if raw_scores else 1.0
+            
+            imp_list = []
+            for k in FEATURE_KEYS:
+                gain_val = raw_scores.get(k, 0.0)
+                pct = round((gain_val / total_gain) * 100, 2) if total_gain > 0 else 0.0
+                imp_list.append({"feature": FEATURE_LABELS[k], "importance": pct})
+            
             imp_list.sort(key=lambda x: x["importance"])
 
             response_data = {
@@ -127,9 +125,9 @@ class handler(BaseHTTPRequestHandler):
                 "advice": fert_info["advice"],
                 "confidence": round(top_conf, 1),
                 "probabilities": [
-                    {"label": "Low Fertility", "probability": round(probabilities[0] * 100, 1), "color": "#C62828"},
-                    {"label": "Moderate Fertility", "probability": round(probabilities[1] * 100, 1), "color": "#D97706"},
-                    {"label": "Very Fertile", "probability": round(probabilities[2] * 100, 1), "color": "#2D5A27"},
+                    {"label": "Low Fertility", "probability": round(float(probs[0]) * 100, 1), "color": "#C62828"},
+                    {"label": "Moderate Fertility", "probability": round(float(probs[1]) * 100, 1), "color": "#D97706"},
+                    {"label": "Very Fertile", "probability": round(float(probs[2]) * 100, 1), "color": "#2D5A27"},
                 ],
                 "feature_importances": imp_list,
                 "inputs": user_inputs,
