@@ -377,8 +377,8 @@ with tab_history:
             class_counts.columns = ["Fertility Class","Count"]
             color_map = {"Highly Fertile":"#1A3B1A","Very Fertile":"#1A3B1A","Moderate Fertility":"#D97706","Medium Fertility":"#D97706","Low Fertility":"#C62828"}
             fig_d = px.pie(class_counts, values="Count", names="Fertility Class", hole=0.55, color="Fertility Class", color_discrete_map=color_map)
-            fig_d.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=20,r=20,t=10,b=10), height=280, legend=dict(orientation="h",yanchor="bottom",y=-0.2,xanchor="center",x=0.5))
-            st.plotly_chart(fig_d, use_container_width=True)
+            fig_d.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=20,r=20,t=10,b=10), height=280, showlegend=False)
+            st.plotly_chart(fig_d, use_container_width=True, config={"displayModeBar": False})
         with cc2:
             st.html('<p class="worksheet-card-title">Primary Nutrients (N-P-K) Logged</p>')
             n_col = [c for c in df_hist.columns if c.startswith("N ") or c=="N"]
@@ -389,8 +389,8 @@ with tab_history:
                 plot_df = df_hist.head(10).copy()
                 plot_df = plot_df[[sample_col,n_col[0],p_col[0],k_col[0]]].melt(id_vars=[sample_col],value_vars=[n_col[0],p_col[0],k_col[0]],var_name="Nutrient",value_name="Value")
                 fig_bh = px.bar(plot_df, x=sample_col, y="Value", color="Nutrient", barmode="group", color_discrete_sequence=["#1A3B1A","#8FA689","#C5B99F"])
-                fig_bh.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#FFFFFF", margin=dict(l=20,r=20,t=10,b=10), height=280, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True,gridcolor="#EAE3D8"), legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1))
-                st.plotly_chart(fig_bh, use_container_width=True)
+                fig_bh.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#FFFFFF", margin=dict(l=20,r=20,t=10,b=10), height=280, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True,gridcolor="#EAE3D8"), showlegend=False)
+                st.plotly_chart(fig_bh, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("---")
         st.html('<p class="worksheet-card-title">Archival Log Entries</p>')
