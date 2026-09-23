@@ -1,0 +1,129 @@
+# ==============================================================================
+# Byte-compiled / optimized / Pylance / IDE cache files
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# ==============================================================================
+# Virtual Environments (Both local names found in workspace)
+# ==============================================================================
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# ==============================================================================
+# Jupyter Notebook Checkpoints & Scratch
+# ==============================================================================
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# ==============================================================================
+# Streamlit & Runtime Output
+# ==============================================================================
+# Streamlit secrets (protect API keys & credentials)
+.streamlit/secrets.toml
+
+# Streamlit / App runtime generated history
+prediction_history.csv
+
+# ==============================================================================
+# Backup and Temporary Files
+# ==============================================================================
+*.bak
+*.backup
+*.tmp
+*.temp
+*~
+app_backup.py
+
+# Microsoft Office lock/temporary files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# ==============================================================================
+# Helper / Build Scripts (Poster, Docs & Paper Generator Helpers)
+# ==============================================================================
+generate_poster_assets.py
+convert_to_docx.py
+
+# Poster assets & auxiliary screenshots / image crops
+poster_assets/
+crop_*.png
+sec*.png
+claude_*.png
+chat_column.png
+user_msg_prompt.png
+*.jpg
+*.jpeg
+
+# ==============================================================================
+# Presentation, Poster, Research Paper & Requirements
+# ==============================================================================
+presentation.html
+poster.html
+research_paper.md
+research_paper.docx
+
+# ==============================================================================
+# Operating System & IDE Artifacts
+# ==============================================================================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VS Code / JetBrains / Editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+
+# Environment Variables, Secrets & API Keys
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*secret*.json
+*credentials*.json
+service_account*.json
+client_secret*.json
+.aws/
+.azure/
+.gcloud/
+token*
+*token*.json
+*.sqlite
+*.db
+*.db3
+
+# ==============================================================================
+# Vercel / Auxiliary Serverless Endpoints & Static Wrappers
+# ==============================================================================
+api/
+vercel.json
+public/
+index.html
+model.json
+
