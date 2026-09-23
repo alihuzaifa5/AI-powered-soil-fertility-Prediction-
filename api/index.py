@@ -1,37 +1,33 @@
 import json
+import math
 import os
-import xgboost as xgb
-import numpy as np
 from http.server import BaseHTTPRequestHandler
 
 # ─────────────────────────────────────────────
-#  GLOBAL BOOSTER CACHING (fast, lightweight memory footprint)
+#  ZERO-DEPENDENCY PURE PYTHON XGBOOST INFERENCE ENGINE
+#  Bundle size: ~1.5 MB (0 MB external pip packages, 100% Vercel Serverless compliant)
 # ─────────────────────────────────────────────
-_BOOSTER = None
 
-def get_booster():
-    global _BOOSTER
-    if _BOOSTER is None:
-        curr_dir = os.path.dirname(os.path.abspath(__file__))
-        base_dir = os.path.dirname(curr_dir)
-        candidates = [
-            os.path.join(curr_dir, "model.json"),
-            os.path.join(base_dir, "model.json"),
-            os.path.join(os.getcwd(), "model.json"),
-            os.path.join(os.getcwd(), "api", "model.json"),
-            os.path.join(curr_dir, "best_xgboost_model.json"),
-            os.path.join(base_dir, "best_xgboost_model.json"),
-        ]
-        model_path = None
-        for c in candidates:
-            if os.path.exists(c):
-                model_path = c
-                break
-        if not model_path:
-            raise FileNotFoundError("Could not find model.json in any expected location")
-        _BOOSTER = xgb.Booster()
-        _BOOSTER.load_model(model_path)
-    return _BOOSTER
+_MODEL_DATA = None
+_TREES = None
+_TREE_INFO = None
+_FEATURE_NAMES = None
+_FEATURE_IMPORTANCES = None
+
+FEATURE_LABELS = {
+    "N": "Nitrogen (N)",
+    "P": "Phosphorus (P)",
+    "K": "Potassium (K)",
+    "pH": "Soil pH",
+    "EC": "Electrical Conductivity",
+    "OC": "Organic Carbon",
+    "S": "Sulphur (S)",
+    "Zn": "Zinc (Zn)",
+    "Fe": "Iron (Fe)",
+    "Cu": "Copper (Cu)",
+    "Mn": "Manganese (Mn)",
+    "B": "Boron (B)",
+}
 
 FERTILITY_MAP = {
     0: {
@@ -54,22 +50,79 @@ FERTILITY_MAP = {
     },
 }
 
-FEATURE_KEYS = ['N', 'P', 'K', 'pH', 'EC', 'OC', 'S', 'Zn', 'Fe', 'Cu', 'Mn', 'B']
+def load_model():
+    global _MODEL_DATA, _TREES, _TREE_INFO, _FEATURE_NAMES, _FEATURE_IMPORTANCES
+    if _MODEL_DATA is not None:
+        return
 
-FEATURE_LABELS = {
-    "N": "Nitrogen (N)",
-    "P": "Phosphorus (P)",
-    "K": "Potassium (K)",
-    "pH": "Soil pH",
-    "EC": "Electrical Conductivity",
-    "OC": "Organic Carbon",
-    "S": "Sulphur (S)",
-    "Zn": "Zinc (Zn)",
-    "Fe": "Iron (Fe)",
-    "Cu": "Copper (Cu)",
-    "Mn": "Manganese (Mn)",
-    "B": "Boron (B)",
-}
+    curr_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(curr_dir)
+    candidates = [
+        os.path.join(curr_dir, "model.json"),
+        os.path.join(base_dir, "model.json"),
+        os.path.join(os.getcwd(), "model.json"),
+        os.path.join(os.getcwd(), "api", "model.json"),
+    ]
+    model_path = None
+    for c in candidates:
+        if os.path.exists(c):
+            model_path = c
+            break
+
+    if not model_path:
+        raise FileNotFoundError("Could not find model.json in any expected location")
+
+    with open(model_path, "r", encoding="utf-8") as f:
+        _MODEL_DATA = json.load(f)
+
+    gb = _MODEL_DATA["learner"]["gradient_booster"]["model"]
+    _TREES = gb["trees"]
+    _TREE_INFO = gb["tree_info"]
+    _FEATURE_NAMES = _MODEL_DATA["learner"]["feature_names"]
+
+    # Pre-calculate feature importances from gain loss changes
+    f_gains = {k: 0.0 for k in _FEATURE_NAMES}
+    for t in _TREES:
+        for s_idx, loss in zip(t["split_indices"], t["loss_changes"]):
+            if s_idx < len(_FEATURE_NAMES):
+                f_gains[_FEATURE_NAMES[s_idx]] += float(loss)
+    tot = sum(f_gains.values()) or 1.0
+    imp = [
+        {"feature": FEATURE_LABELS.get(k, k), "importance": round(v / tot * 100, 2)}
+        for k, v in f_gains.items()
+    ]
+    imp.sort(key=lambda x: x["importance"])
+    _FEATURE_IMPORTANCES = imp
+
+
+def predict_fertility(user_inputs):
+    load_model()
+    margins = [0.0, 0.0, 0.0]
+    vals = [float(user_inputs.get(k, 0.0)) for k in _FEATURE_NAMES]
+
+    for t, cls in zip(_TREES, _TREE_INFO):
+        curr = 0
+        lefts = t["left_children"]
+        rights = t["right_children"]
+        splits = t["split_indices"]
+        conds = t["split_conditions"]
+        weights = t["base_weights"]
+
+        while lefts[curr] != -1:
+            f_idx = splits[curr]
+            val = vals[f_idx]
+            if val < conds[curr]:
+                curr = lefts[curr]
+            else:
+                curr = rights[curr]
+        margins[cls] += weights[curr]
+
+    max_m = max(margins)
+    exp_m = [math.exp(v - max_m) for v in margins]
+    sum_exp = sum(exp_m)
+    probs = [v / sum_exp for v in exp_m]
+    return probs
+
 
 class handler(BaseHTTPRequestHandler):
     def _send_json(self, status_code, payload):
@@ -92,8 +145,8 @@ class handler(BaseHTTPRequestHandler):
         self._send_json(200, {
             "status": "healthy",
             "service": "AI Soil Fertility Prediction API",
-            "model_format": "Native XGBoost JSON (Lightweight Serverless)",
-            "features": FEATURE_KEYS
+            "engine": "Zero-Dependency Native Tree Evaluator",
+            "features": list(FEATURE_LABELS.keys())
         })
 
     def do_POST(self):
@@ -103,30 +156,12 @@ class handler(BaseHTTPRequestHandler):
             data = json.loads(raw_body) if raw_body else {}
 
             sample_id = data.get("sample_id", "Plot-001")
-            user_inputs = {k: float(data.get(k, 0.0)) for k in FEATURE_KEYS}
-            
-            # Format input array for XGBoost DMatrix
-            row_vals = [user_inputs[k] for k in FEATURE_KEYS]
-            np_arr = np.array([row_vals], dtype=np.float32)
-            dmatrix = xgb.DMatrix(np_arr, feature_names=FEATURE_KEYS)
+            user_inputs = {k: float(data.get(k, 0.0)) for k in FEATURE_LABELS.keys()}
 
-            booster = get_booster()
-            probs = booster.predict(dmatrix)[0]
-            pred_code = int(np.argmax(probs))
+            probs = predict_fertility(user_inputs)
+            pred_code = int(probs.index(max(probs)))
             top_conf = float(probs[pred_code] * 100)
             fert_info = FERTILITY_MAP.get(pred_code, FERTILITY_MAP[1])
-
-            # Calculate feature gain percentages
-            raw_scores = booster.get_score(importance_type="gain")
-            total_gain = sum(raw_scores.values()) if raw_scores else 1.0
-            
-            imp_list = []
-            for k in FEATURE_KEYS:
-                gain_val = raw_scores.get(k, 0.0)
-                pct = round((gain_val / total_gain) * 100, 2) if total_gain > 0 else 0.0
-                imp_list.append({"feature": FEATURE_LABELS[k], "importance": pct})
-            
-            imp_list.sort(key=lambda x: x["importance"])
 
             response_data = {
                 "success": True,
@@ -142,7 +177,7 @@ class handler(BaseHTTPRequestHandler):
                     {"label": "Moderate Fertility", "probability": round(float(probs[1]) * 100, 1), "color": "#D97706"},
                     {"label": "Very Fertile", "probability": round(float(probs[2]) * 100, 1), "color": "#2D5A27"},
                 ],
-                "feature_importances": imp_list,
+                "feature_importances": _FEATURE_IMPORTANCES,
                 "inputs": user_inputs,
             }
             self._send_json(200, response_data)
