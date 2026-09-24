@@ -706,18 +706,23 @@ with tab_analyzer:
                 hovertemplate="<b>%{x}</b><br>Probability: %{y:.1f}%<extra></extra>"
             ))
             fig_prob.update_layout(
+                dragmode=False,
+                autosize=True,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=35, r=20, t=25, b=30),
                 height=230,
                 font=dict(family="Plus Jakarta Sans, sans-serif"),
+                hoverlabel=dict(bgcolor="#1A3B1A", font_size=12, font_family="Plus Jakarta Sans, sans-serif", font_color="#FFFFFF"),
                 xaxis=dict(
+                    fixedrange=True,
                     showgrid=False,
                     tickfont=dict(size=11, family="Plus Jakarta Sans, sans-serif", color="#1E261D"),
                     linecolor="#D5CDC0",
                     linewidth=1
                 ),
                 yaxis=dict(
+                    fixedrange=True,
                     showgrid=True,
                     gridcolor="rgba(128,128,128,0.18)",
                     tickfont=dict(size=10, family="Plus Jakarta Sans, sans-serif", color="#6E7568"),
@@ -725,7 +730,16 @@ with tab_analyzer:
                 ),
                 showlegend=False
             )
-            st.plotly_chart(fig_prob, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(
+                fig_prob,
+                use_container_width=True,
+                config={
+                    "displayModeBar": False,
+                    "responsive": True,
+                    "scrollZoom": False,
+                    "doubleClick": "reset"
+                }
+            )
 
             st.html('<div class="worksheet-card-title" style="margin-top:1rem;">XGBoost Feature Importance</div>')
             importances = getattr(model, "feature_importances_", None)
@@ -765,12 +779,16 @@ with tab_analyzer:
                 hovertemplate="<b>%{y}</b><br>Gain: %{x:.2f}%<extra></extra>"
             ))
             fig_imp.update_layout(
+                dragmode=False,
+                autosize=True,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=165, r=40, t=10, b=25),
                 height=420,
                 font=dict(family="Plus Jakarta Sans, sans-serif"),
+                hoverlabel=dict(bgcolor="#1A3B1A", font_size=12, font_family="Plus Jakarta Sans, sans-serif", font_color="#FFFFFF"),
                 xaxis=dict(
+                    fixedrange=True,
                     title=dict(text="Split Gain (%)", font=dict(size=11, color="#555E50")),
                     showgrid=True,
                     gridcolor="rgba(128,128,128,0.18)",
@@ -778,12 +796,22 @@ with tab_analyzer:
                     tickfont=dict(size=10, color="#6E7568")
                 ),
                 yaxis=dict(
+                    fixedrange=True,
                     tickfont=dict(size=10.5, family="Plus Jakarta Sans, sans-serif", color="#1E261D"),
                     automargin=True
                 ),
                 showlegend=False
             )
-            st.plotly_chart(fig_imp, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(
+                fig_imp,
+                use_container_width=True,
+                config={
+                    "displayModeBar": False,
+                    "responsive": True,
+                    "scrollZoom": False,
+                    "doubleClick": "reset"
+                }
+            )
 
 # ═════════════════════════════════════════════
 #  TAB 2: HISTORY
@@ -841,14 +869,26 @@ with tab_history:
                 hovertemplate="<b>%{label}</b><br>Count: %{value} (%{percent})<extra></extra>"
             )
             fig_d.update_layout(
+                dragmode=False,
+                autosize=True,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=20, r=20, t=10, b=10),
                 height=280,
                 font=dict(family="Plus Jakarta Sans, sans-serif"),
+                hoverlabel=dict(bgcolor="#1A3B1A", font_size=12, font_family="Plus Jakarta Sans, sans-serif", font_color="#FFFFFF"),
                 showlegend=False
             )
-            st.plotly_chart(fig_d, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(
+                fig_d,
+                use_container_width=True,
+                config={
+                    "displayModeBar": False,
+                    "responsive": True,
+                    "scrollZoom": False,
+                    "doubleClick": "reset"
+                }
+            )
         with cc2:
             st.html('<div class="worksheet-card-title">Primary Nutrients (N-P-K) Logged</div>')
             n_col = [c for c in df_hist.columns if c.startswith("N ") or c == "N"]
@@ -872,16 +912,28 @@ with tab_history:
                     color_discrete_sequence=["#1A3B1A", "#5B8C5A", "#C5A869"]
                 )
                 fig_bh.update_layout(
+                    dragmode=False,
+                    autosize=True,
                     paper_bgcolor="rgba(0,0,0,0)",
                     plot_bgcolor="rgba(0,0,0,0)",
                     margin=dict(l=20, r=20, t=10, b=25),
                     height=280,
                     font=dict(family="Plus Jakarta Sans, sans-serif"),
-                    xaxis=dict(showgrid=False),
-                    yaxis=dict(showgrid=True, gridcolor="rgba(128,128,128,0.18)"),
+                    hoverlabel=dict(bgcolor="#1A3B1A", font_size=12, font_family="Plus Jakarta Sans, sans-serif", font_color="#FFFFFF"),
+                    xaxis=dict(fixedrange=True, showgrid=False),
+                    yaxis=dict(fixedrange=True, showgrid=True, gridcolor="rgba(128,128,128,0.18)"),
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
                 )
-                st.plotly_chart(fig_bh, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(
+                    fig_bh,
+                    use_container_width=True,
+                    config={
+                        "displayModeBar": False,
+                        "responsive": True,
+                        "scrollZoom": False,
+                        "doubleClick": "reset"
+                    }
+                )
 
         st.markdown("---")
         st.html('<div class="worksheet-card-title">Archival Log Entries</div>')
