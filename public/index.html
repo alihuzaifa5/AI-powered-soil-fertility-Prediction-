@@ -484,7 +484,23 @@
       font-weight: 600;
       border-bottom: 1px dashed #D6CCBD;
       padding-bottom: 0.5rem;
-      margin: 1.4rem 0 0.8rem;
+      margin: 0 0 0.85rem 0;
+    }
+
+    .chart-section {
+      margin-top: 1.8rem;
+    }
+
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.85rem 1rem 0.6rem;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      box-sizing: border-box;
+      width: 100%;
+      overflow: hidden;
     }
 
     /* History & KPI */
@@ -578,9 +594,10 @@
       text-align: center;
       color: var(--text-dim);
       font-size: 0.82rem;
-      padding: 2rem 0;
-      margin-top: auto;
+      padding: 3rem 0 2rem;
+      margin-top: 3.5rem;
       border-top: 1px solid var(--border-subtle);
+      clear: both;
     }
   </style>
 </head>
@@ -670,13 +687,21 @@
               <div class="pred-sample-tag" id="pred-sample-tag">--</div>
             </div>
 
-            <!-- Probability Chart -->
-            <p class="worksheet-card-title">XGBoost Class Probabilities</p>
-            <div id="prob-chart" style="width:100%;height:220px;background:#fff;border-radius:10px;padding:0.4rem;"></div>
+            <!-- Probability Chart Section -->
+            <div class="chart-section" style="margin-top: 1.8rem;">
+              <p class="worksheet-card-title">XGBoost Class Probabilities</p>
+              <div class="chart-card">
+                <div id="prob-chart" style="width:100%;min-height:240px;"></div>
+              </div>
+            </div>
 
-            <!-- Feature Importance Chart -->
-            <p class="worksheet-card-title">XGBoost Feature Importance</p>
-            <div id="imp-chart" style="width:100%;height:300px;background:#fff;border-radius:10px;padding:0.4rem;"></div>
+            <!-- Feature Importance Chart Section -->
+            <div class="chart-section" style="margin-top: 2rem;">
+              <p class="worksheet-card-title">XGBoost Feature Importance</p>
+              <div class="chart-card">
+                <div id="imp-chart" style="width:100%;min-height:435px;"></div>
+              </div>
+            </div>
           </div>
         </aside>
       </div>
@@ -863,7 +888,7 @@
         x: data.probabilities.map(p => p.label),
         y: data.probabilities.map(p => p.probability),
         type: 'bar',
-        width: 0.52,
+        width: 0.5,
         marker: {
           color: data.probabilities.map(p => p.color),
           line: { width: 1, color: 'rgba(0,0,0,0.1)' }
@@ -875,13 +900,29 @@
       }];
 
       Plotly.newPlot('prob-chart', probData, {
-        margin: { l: 35, r: 20, t: 25, b: 30 },
-        height: 230,
+        dragmode: false,
+        autosize: true,
+        margin: { l: 45, r: 25, t: 25, b: 35 },
+        height: 235,
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
-        yaxis: { range: [0, 118], gridcolor: 'rgba(128,128,128,0.18)', tickfont: { size: 10 } },
-        xaxis: { tickfont: { size: 11, color: '#1A3B1A' } }
-      }, { displayModeBar: false, responsive: true });
+        hoverlabel: { bgcolor: '#1A3B1A', font: { size: 12, family: 'Plus Jakarta Sans, sans-serif', color: '#FFFFFF' } },
+        yaxis: {
+          fixedrange: true,
+          range: [0, 118],
+          gridcolor: 'rgba(128,128,128,0.18)',
+          tickfont: { size: 10, family: 'Plus Jakarta Sans, sans-serif' }
+        },
+        xaxis: {
+          fixedrange: true,
+          tickfont: { size: 11, family: 'Plus Jakarta Sans, sans-serif' }
+        }
+      }, {
+        displayModeBar: false,
+        responsive: true,
+        scrollZoom: false,
+        doubleClick: 'reset'
+      });
 
       // Render Feature Importance Chart
       const maxImp = Math.max(...data.feature_importances.map(i => i.importance), 10);
@@ -901,21 +942,31 @@
       }];
 
       Plotly.newPlot('imp-chart', impData, {
-        margin: { l: 155, r: 40, t: 15, b: 30 },
-        height: 420,
+        dragmode: false,
+        autosize: true,
+        margin: { l: 185, r: 50, t: 15, b: 35 },
+        height: 430,
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
+        hoverlabel: { bgcolor: '#1A3B1A', font: { size: 12, family: 'Plus Jakarta Sans, sans-serif', color: '#FFFFFF' } },
         xaxis: {
-          title: { text: 'Split Gain (%)', font: { size: 11, color: '#555E50' } },
+          fixedrange: true,
+          title: { text: 'Split Gain (%)', font: { size: 11, color: '#555E50', family: 'Plus Jakarta Sans, sans-serif' } },
           gridcolor: 'rgba(128,128,128,0.18)',
           range: [0, maxImp * 1.25],
-          tickfont: { size: 10 }
+          tickfont: { size: 10, family: 'Plus Jakarta Sans, sans-serif' }
         },
         yaxis: {
+          fixedrange: true,
           automargin: true,
           tickfont: { size: 10.5, family: 'Plus Jakarta Sans, sans-serif' }
         }
-      }, { displayModeBar: false, responsive: true });
+      }, {
+        displayModeBar: false,
+        responsive: true,
+        scrollZoom: false,
+        doubleClick: 'reset'
+      });
     }
 
     // Local heuristic fallback if serverless API isn't responding yet

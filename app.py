@@ -741,7 +741,7 @@ with tab_analyzer:
                 }
             )
 
-            st.html('<div class="worksheet-card-title" style="margin-top:1rem;">XGBoost Feature Importance</div>')
+            st.html('<div class="worksheet-card-title" style="margin-top:2rem;">XGBoost Feature Importance</div>')
             importances = getattr(model, "feature_importances_", None)
             if importances is not None and len(importances) == len(FEATURES):
                 df_imp = pd.DataFrame({
@@ -783,8 +783,8 @@ with tab_analyzer:
                 autosize=True,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=165, r=40, t=10, b=25),
-                height=420,
+                margin=dict(l=185, r=50, t=10, b=25),
+                height=430,
                 font=dict(family="Plus Jakarta Sans, sans-serif"),
                 hoverlabel=dict(bgcolor="#1A3B1A", font_size=12, font_family="Plus Jakarta Sans, sans-serif", font_color="#FFFFFF"),
                 xaxis=dict(
@@ -792,7 +792,7 @@ with tab_analyzer:
                     title=dict(text="Split Gain (%)", font=dict(size=11, color="#555E50")),
                     showgrid=True,
                     gridcolor="rgba(128,128,128,0.18)",
-                    range=[0, max_val * 1.22],
+                    range=[0, max_val * 1.25],
                     tickfont=dict(size=10, color="#6E7568")
                 ),
                 yaxis=dict(
@@ -966,6 +966,6 @@ with tab_history:
         st.dataframe(filtered_df, use_container_width=True, hide_index=True)
 
 st.markdown("---")
-st.html("""<div style="text-align:center;color:#787E71;font-size:.84rem;padding-bottom:1.5rem;">
+st.html("""<div style="text-align:center;color:#787E71;font-size:.84rem;padding-top:1.5rem;padding-bottom:3rem;margin-top:2rem;clear:both;">
 Soil Fertility Analyzer &middot; Powered by XGBoost &amp; Streamlit &middot; Field Laboratory Edition
 </div>""")
