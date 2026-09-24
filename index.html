@@ -289,36 +289,6 @@
       transform: scale(1.15);
     }
 
-    /* Preset Buttons */
-    .preset-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 1.2rem 0 1.5rem;
-    }
-
-    .preset-btn {
-      background: #F5F3EC;
-      border: 1.5px solid #C0B8AC;
-      border-radius: 30px;
-      padding: 0.35rem 1rem;
-      font-size: 0.84rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .btn-preset-low { color: #C62828; }
-    .btn-preset-low:hover { background: #FDF0F0; border-color: #C62828; }
-
-    .btn-preset-med { color: #B45309; }
-    .btn-preset-med:hover { background: #FEF5E7; border-color: #B45309; }
-
-    .btn-preset-high { color: #1A6B35; }
-    .btn-preset-high:hover { background: #EDF7F0; border-color: #1A6B35; }
-
-    .btn-preset-reset { color: #555E50; }
-    .btn-preset-reset:hover { background: #EBE6DC; border-color: #7D8577; }
 
     /* Scorecard */
     .scorecard-grid {
@@ -650,14 +620,6 @@
             <input type="text" id="sample_id" class="form-control" value="Plot-North-Field-A">
           </div>
 
-          <!-- Quick Presets -->
-          <div class="preset-bar">
-            <span style="font-size:0.8rem;color:var(--text-dim);font-weight:600;align-self:center;">Presets:</span>
-            <button type="button" class="preset-btn btn-preset-low" onclick="applyPreset('low')">Deficient (Low)</button>
-            <button type="button" class="preset-btn btn-preset-med" onclick="applyPreset('med')">Moderate</button>
-            <button type="button" class="preset-btn btn-preset-high" onclick="applyPreset('high')">Optimum (Very Fertile)</button>
-            <button type="button" class="preset-btn btn-preset-reset" onclick="applyPreset('reset')">Reset Defaults</button>
-          </div>
 
           <!-- Parameter Sliders -->
           <div class="param-grid" id="sliders-container">
@@ -789,12 +751,6 @@
       B:   { label: "Boron (B)",               unit: "mg/kg", min: 0.0, max: 10.0,  step: 0.1,  val: 0.85 }
     };
 
-    const PRESETS = {
-      low:   { N: 40,  P: 8,   K: 70,  pH: 5.1, EC: 0.15, OC: 0.25, S: 4.0,  Zn: 0.3, Fe: 2.1, Cu: 0.12, Mn: 1.1, B: 0.2 },
-      med:   { N: 160, P: 18,  K: 190, pH: 6.4, EC: 0.35, OC: 0.65, S: 12.0, Zn: 0.8, Fe: 5.5, Cu: 0.40, Mn: 3.2, B: 0.6 },
-      high:  { N: 240, P: 32,  K: 280, pH: 7.0, EC: 0.55, OC: 1.20, S: 22.0, Zn: 1.5, Fe: 10.0, Cu: 0.80, Mn: 6.5, B: 1.1 },
-      reset: { N: 180, P: 22,  K: 240, pH: 6.8, EC: 0.45, OC: 0.95, S: 16.0, Zn: 1.2, Fe: 8.5, Cu: 0.55, Mn: 4.8, B: 0.85 }
-    };
 
     // Initialize Sliders & Scorecard
     function initUI() {
@@ -834,16 +790,6 @@
       document.getElementById(`score-${key}`).innerHTML = `${num.toFixed(2)} <span style="font-size:.7rem;font-weight:normal;color:#787E71;">${FEATURES[key].unit}</span>`;
     }
 
-    function applyPreset(name) {
-      const values = PRESETS[name];
-      if (!values) return;
-      for (const [k, v] of Object.entries(values)) {
-        FEATURES[k].val = v;
-        const slider = document.getElementById(`slider-${k}`);
-        if (slider) slider.value = v;
-        onSliderChange(k, v);
-      }
-    }
 
     function switchTab(tab) {
       document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
