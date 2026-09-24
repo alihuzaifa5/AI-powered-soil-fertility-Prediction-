@@ -863,37 +863,58 @@
         x: data.probabilities.map(p => p.label),
         y: data.probabilities.map(p => p.probability),
         type: 'bar',
-        width: 0.45,
-        marker: { color: data.probabilities.map(p => p.color) },
+        width: 0.52,
+        marker: {
+          color: data.probabilities.map(p => p.color),
+          line: { width: 1, color: 'rgba(0,0,0,0.1)' }
+        },
         text: data.probabilities.map(p => p.probability.toFixed(1) + "%"),
-        textposition: 'auto',
+        textposition: 'outside',
+        textfont: { size: 12, family: 'Plus Jakarta Sans, sans-serif' },
         hoverinfo: 'x+y'
       }];
 
       Plotly.newPlot('prob-chart', probData, {
-        margin: { l: 20, r: 20, t: 10, b: 25 },
+        margin: { l: 35, r: 20, t: 25, b: 30 },
+        height: 230,
         paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: '#FFFFFF',
-        yaxis: { range: [0, 105], gridcolor: '#EAE3D8', tickfont: { size: 10 } },
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        yaxis: { range: [0, 118], gridcolor: 'rgba(128,128,128,0.18)', tickfont: { size: 10 } },
         xaxis: { tickfont: { size: 11, color: '#1A3B1A' } }
       }, { displayModeBar: false, responsive: true });
 
       // Render Feature Importance Chart
+      const maxImp = Math.max(...data.feature_importances.map(i => i.importance), 10);
       const impData = [{
         y: data.feature_importances.map(i => i.feature),
         x: data.feature_importances.map(i => i.importance),
         type: 'bar',
         orientation: 'h',
-        marker: { color: '#2A5329' },
+        marker: {
+          color: data.feature_importances.map(i => i.importance >= 20 ? '#1A3B1A' : (i.importance >= 4.5 ? '#2D6A30' : '#659164')),
+          line: { width: 0.8, color: 'rgba(0,0,0,0.08)' }
+        },
+        text: data.feature_importances.map(i => i.importance.toFixed(1) + "%"),
+        textposition: 'outside',
+        textfont: { size: 10.5, family: 'Plus Jakarta Sans, sans-serif' },
         hoverinfo: 'x+y'
       }];
 
       Plotly.newPlot('imp-chart', impData, {
-        margin: { l: 95, r: 20, t: 10, b: 35 },
+        margin: { l: 155, r: 40, t: 15, b: 30 },
+        height: 420,
         paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: '#FFFFFF',
-        xaxis: { title: 'Split Gain (%)', gridcolor: '#EAE3D8' },
-        yaxis: { tickfont: { size: 9.5 } }
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        xaxis: {
+          title: { text: 'Split Gain (%)', font: { size: 11, color: '#555E50' } },
+          gridcolor: 'rgba(128,128,128,0.18)',
+          range: [0, maxImp * 1.25],
+          tickfont: { size: 10 }
+        },
+        yaxis: {
+          automargin: true,
+          tickfont: { size: 10.5, family: 'Plus Jakarta Sans, sans-serif' }
+        }
       }, { displayModeBar: false, responsive: true });
     }
 
@@ -911,22 +932,30 @@
       }
       const simData = {
         success: true,
-        sample_id: payload.sample_id,
+        sample_id: payload.sample_id || "Sample #01",
         label: label,
         health_rating: health,
         chip: chip,
         confidence: conf,
         advice: "Assessment computed based on macro and micronutrient parameters.",
         probabilities: [
-          { label: "Low Fertility", probability: probs[0], color: "#C62828" },
+          { label: "Low Fertility", probability: probs[0], color: "#DC2626" },
           { label: "Moderate Fertility", probability: probs[1], color: "#D97706" },
-          { label: "Very Fertile", probability: probs[2], color: "#2D5A27" }
+          { label: "Very Fertile", probability: probs[2], color: "#16A34A" }
         ],
         feature_importances: [
-          { feature: "Soil pH", importance: 2.89 },
-          { feature: "Potassium", importance: 3.83 },
-          { feature: "Phosphorus", importance: 26.80 },
-          { feature: "Nitrogen", importance: 40.23 }
+          { feature: "Zinc (Zn)", importance: 2.53 },
+          { feature: "Organic Carbon", importance: 2.95 },
+          { feature: "Soil pH", importance: 3.14 },
+          { feature: "Iron (Fe)", importance: 3.14 },
+          { feature: "Manganese (Mn)", importance: 3.16 },
+          { feature: "Sulphur (S)", importance: 3.41 },
+          { feature: "Elec. Cond.", importance: 3.47 },
+          { feature: "Boron (B)", importance: 3.63 },
+          { feature: "Potassium (K)", importance: 3.86 },
+          { feature: "Copper (Cu)", importance: 5.02 },
+          { feature: "Phosphorus (P)", importance: 25.98 },
+          { feature: "Nitrogen (N)", importance: 39.69 }
         ],
         inputs: payload
       };
